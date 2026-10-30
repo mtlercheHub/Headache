@@ -1,88 +1,285 @@
+
 <!DOCTYPE html>
 <html lang="da">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Min hovedpinedagbog</title>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 600px;
-      margin: 40px auto;
-      padding: 20px;
-      background: #f5f5f5;
-    }
-
-    .app {
-      background: white;
-      padding: 25px;
-      border-radius: 16px;
-    }
-
-    h1 {
-      margin-top: 0;
-    }
-
-    label {
-      display: block;
-      margin-top: 20px;
-      font-weight: bold;
-    }
-
-    input, button {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 12px;
-      margin-top: 8px;
-      font-size: 16px;
-    }
-
-    button {
-      margin-top: 25px;
-      cursor: pointer;
-    }
-
-    #resultat {
-      margin-top: 25px;
-      padding: 15px;
-      background: #eee;
-      border-radius: 10px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Min hovedpinedagbog</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  font-family: Arial, sans-serif;
+  background: #f3f4f6;
+  color: #252b35;
+  margin: 0;
+  padding: 20px 14px;
+}
+main { max-width: 650px; margin: auto; }
+h1 { font-size: 27px; margin-bottom: 5px; }
+h2 { font-size: 19px; margin-top: 25px; }
+.sub { color: #687080; margin-top: 0; }
+.card {
+  background: white;
+  padding: 18px;
+  border-radius: 14px;
+  margin: 15px 0;
+  box-shadow: 0 2px 8px #0000000c;
+}
+label { display: block; font-weight: bold; margin: 14px 0 6px; }
+input, select, textarea, button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd0d8;
+  font: inherit;
+}
+textarea { min-height: 65px; }
+button {
+  background: #344b68;
+  color: white;
+  border: 0;
+  margin-top: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+button.secondary { background: #e8edf3; color: #25364c; }
+button.danger { background: #8d3434; }
+.small { font-size: 13px; color: #687080; }
+.event {
+  border-left: 3px solid #8097b4;
+  padding: 8px 12px;
+  margin: 12px 0;
+  background: #f7f8fa;
+}
+.episode { border-top: 1px solid #e3e6eb; padding-top: 12px; margin-top: 12px; }
+.hidden { display: none; }
+.row { display: flex; gap: 8px; }
+.row button { flex: 1; }
+</style>
 </head>
-
 <body>
+<main>
+  <h1>🧠 Min hovedpinedagbog</h1>
+  <p class="sub">Registrér anfald og følg deres udvikling.</p>
 
-  <div class="app">
-    <h1>🧠 Min hovedpinedagbog</h1>
+  <section class="card">
+    <h2 id="status">Intet aktivt anfald</h2>
+    <button id="startBtn" onclick="startAttack()">Start nyt anfald</button>
+    <div id="activeArea" class="hidden">
+      <p id="startTime" class="small"></p>
 
-    <p>Min allerførste app!</p>
+      <label for="type">Hvad vil du registrere?</label>
+      <select id="type">
+        <option value="Symptom">Symptom</option>
+        <option value="Smertegrad">Smertegrad</option>
+        <option value="Medicin">Medicin</option>
+        <option value="Andet">Andet</option>
+      </select>
 
-    <label for="smerte">Hvor stærk er smerten? (0–10)</label>
-    <input id="smerte" type="number" min="0" max="10">
+      <label for="description">Beskrivelse</label>
+      <textarea id="description" placeholder="Fx tryk bag højre øje, snurren, sumatriptan..."></textarea>
 
-    <button onclick="registrer()">Registrér hovedpine</button>
+      <label for="pain">Smertegrad (0–10), hvis relevant</label>
+      <input id="pain" type="number" min="0" max="10" placeholder="Fx 7">
 
-    <div id="resultat">
-      Ingen hovedpine registreret endnu.
+      <label for="eventTime">Tidspunkt</label>
+      <input id="eventTime" type="datetime-local">
+
+      <button onclick="addEvent()">Gem registrering</button>
+
+      <h2>Dette anfald</h2>
+      <div id="timeline"></div>
+      <button class="danger" onclick="endAttack()">Afslut anfald</button>
     </div>
-  </div>
+  </section>
 
-  <script>
-    function registrer() {
-      const smerte = document.getElementById("smerte").value;
+  <section class="card">
+    <h2>Min historik</h2>
+    <div id="history"></div>
+  </section>
 
-      if (smerte === "") {
-        document.getElementById("resultat").innerText =
-          "Skriv først en smertegrad.";
-        return;
-      }
+  <section class="card">
+    <h2>Mine data</h2>
+    <p class="small">Gem en sikkerhedskopi eller eksportér dine registreringer.</p>
+    <button onclick="exportJSON()">Eksportér sikkerhedskopi (JSON)</button>
+    <button class="secondary" onclick="exportCSV()">Eksportér til regneark (CSV)</button>
+    <label for="importFile">Gendan fra sikkerhedskopi</label>
+    <input id="importFile" type="file" accept=".json,application/json">
+    <button class="secondary" onclick="importJSON()">Importér sikkerhedskopi</button>
+  </section>
 
-      document.getElementById("resultat").innerText =
-        "Registreret hovedpine med smerte " + smerte + "/10.";
+  <p class="small">Data gemmes lokalt i denne browser. Husk at tage sikkerhedskopi.</p>
+</main>
+
+<script>
+const KEY = "hovedpineDagbogV1";
+let episodes = JSON.parse(localStorage.getItem(KEY) || "[]");
+
+function save() {
+  localStorage.setItem(KEY, JSON.stringify(episodes));
+  render();
+}
+
+function nowLocal() {
+  const d = new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+    .toISOString().slice(0,16);
+}
+
+function formatDate(value) {
+  return new Date(value).toLocaleString("da-DK");
+}
+
+function activeEpisode() {
+  return episodes.find(e => !e.end);
+}
+
+function startAttack() {
+  if (activeEpisode()) return;
+  episodes.unshift({
+    id: Date.now(),
+    start: new Date().toISOString(),
+    end: null,
+    events: []
+  });
+  save();
+}
+
+function addEvent() {
+  const episode = activeEpisode();
+  if (!episode) return;
+
+  const type = document.getElementById("type").value;
+  const description = document.getElementById("description").value.trim();
+  const pain = document.getElementById("pain").value;
+  const time = document.getElementById("eventTime").value;
+
+  if (!description && pain === "") {
+    alert("Skriv en beskrivelse eller angiv en smertegrad.");
+    return;
+  }
+  if (pain !== "" && (Number(pain) < 0 || Number(pain) > 10)) {
+    alert("Smertegraden skal være mellem 0 og 10.");
+    return;
+  }
+
+  episode.events.push({
+    type,
+    description,
+    pain: pain === "" ? null : Number(pain),
+    time: time ? new Date(time).toISOString() : new Date().toISOString()
+  });
+
+  document.getElementById("description").value = "";
+  document.getElementById("pain").value = "";
+  document.getElementById("eventTime").value = nowLocal();
+  save();
+}
+
+function endAttack() {
+  const episode = activeEpisode();
+  if (!episode) return;
+  if (!confirm("Vil du afslutte dette anfald?")) return;
+  episode.end = new Date().toISOString();
+  save();
+}
+
+function render() {
+  const active = activeEpisode();
+  document.getElementById("status").textContent =
+    active ? "Anfald i gang" : "Intet aktivt anfald";
+  document.getElementById("startBtn").classList.toggle("hidden", !!active);
+  document.getElementById("activeArea").classList.toggle("hidden", !active);
+
+  if (active) {
+    document.getElementById("startTime").textContent =
+      "Startet: " + formatDate(active.start);
+    document.getElementById("timeline").innerHTML =
+      active.events.length ? active.events
+        .slice().sort((a,b) => new Date(a.time)-new Date(b.time))
+        .map(eventHTML).join("") : "<p class='small'>Ingen registreringer endnu.</p>";
+  }
+
+  const history = episodes.filter(e => e.end);
+  document.getElementById("history").innerHTML = history.length
+    ? history.map(e => `
+      <div class="episode">
+        <strong>${formatDate(e.start)}</strong>
+        <p class="small">Afsluttet: ${formatDate(e.end)}</p>
+        <p>${e.events.length} registreringer</p>
+        ${e.events.map(eventHTML).join("")}
+      </div>`).join("")
+    : "<p class='small'>Dine afsluttede anfald vises her.</p>";
+}
+
+function eventHTML(e) {
+  return `<div class="event">
+    <strong>${escapeHTML(e.type)}</strong>
+    <div class="small">${formatDate(e.time)}</div>
+    <div>${escapeHTML(e.description || "")}</div>
+    ${e.pain !== null ? "<strong>Smerte: " + e.pain + "/10</strong>" : ""}
+  </div>`;
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, c => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  })[c]);
+}
+
+function download(filename, content, type) {
+  const blob = new Blob([content], {type});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportJSON() {
+  download("hovedpine-backup.json",
+    JSON.stringify(episodes, null, 2), "application/json");
+}
+
+function exportCSV() {
+  const rows = [["Anfald startet","Anfald afsluttet","Registreringstid",
+    "Type","Beskrivelse","Smertegrad"]];
+  episodes.forEach(e => e.events.forEach(v => rows.push([
+    e.start, e.end || "", v.time, v.type, v.description, v.pain ?? ""
+  ])));
+  const csv = rows.map(row => row.map(value =>
+    '"' + String(value).replace(/"/g, '""') + '"'
+  ).join(";")).join("\n");
+  download("hovedpine-data.csv", "\uFEFF" + csv, "text/csv;charset=utf-8");
+}
+
+function importJSON() {
+  const file = document.getElementById("importFile").files[0];
+  if (!file) {
+    alert("Vælg først en JSON-sikkerhedskopi.");
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const imported = JSON.parse(reader.result);
+      if (!Array.isArray(imported) ||
+          !imported.every(e => e && typeof e.start === "string" &&
+          Array.isArray(e.events))) throw new Error();
+      if (!confirm("Importen erstatter alle nuværende registreringer. Fortsæt?")) return;
+      episodes = imported;
+      save();
+      alert("Sikkerhedskopien er importeret.");
+    } catch {
+      alert("Filen kunne ikke læses som en gyldig sikkerhedskopi.");
     }
-  </script>
+  };
+  reader.readAsText(file);
+}
 
+document.getElementById("eventTime").value = nowLocal();
+render();
+</script>
 </body>
 </html>
