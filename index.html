@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Min hovedpinedagbog</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    .app {
+      background: white;
+      padding: 25px;
+      border-radius: 16px;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    label {
+      display: block;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    input, button {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      margin-top: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      margin-top: 25px;
+      cursor: pointer;
+    }
+
+    #resultat {
+      margin-top: 25px;
+      padding: 15px;
+      background: #eee;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="app">
+    <h1>🧠 Min hovedpinedagbog</h1>
+
+    <p>Min allerførste app!</p>
+
+    <label for="smerte">Hvor stærk er smerten? (0–10)</label>
+    <input id="smerte" type="number" min="0" max="10">
+
+    <button onclick="registrer()">Registrér hovedpine</button>
+
+    <div id="resultat">
+      Ingen hovedpine registreret endnu.
+    </div>
+  </div>
+
+  <script>
+    function registrer() {
+      const smerte = document.getElementById("smerte").value;
+
+      if (smerte === "") {
+        document.getElementById("resultat").innerText =
+          "Skriv først en smertegrad.";
+        return;
+      }
+
+      document.getElementById("resultat").innerText =
+        "Registreret hovedpine med smerte " + smerte + "/10.";
+    }
+  </script>
+
+</body>
+</html>
