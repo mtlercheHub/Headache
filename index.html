@@ -50,11 +50,10 @@ button.danger { background: #8d3434; }
   padding: 8px 12px;
   margin: 12px 0;
   background: #f7f8fa;
+  overflow-wrap: anywhere;
 }
 .episode { border-top: 1px solid #e3e6eb; padding-top: 12px; margin-top: 12px; }
-.hidden { display: none; }
-.row { display: flex; gap: 8px; }
-.row button { flex: 1; }
+.hidden { display: none !important; }
 </style>
 </head>
 <body>
@@ -65,24 +64,56 @@ button.danger { background: #8d3434; }
   <section class="card">
     <h2 id="status">Intet aktivt anfald</h2>
     <button id="startBtn" onclick="startAttack()">Start nyt anfald</button>
+
     <div id="activeArea" class="hidden">
       <p id="startTime" class="small"></p>
 
       <label for="type">Hvad vil du registrere?</label>
-      <select id="type">
+      <select id="type" onchange="toggleMedication()">
         <option value="Symptom">Symptom</option>
         <option value="Smertegrad">Smertegrad</option>
         <option value="Medicin">Medicin</option>
         <option value="Andet">Andet</option>
       </select>
 
-      <label for="description">Beskrivelse</label>
-      <textarea id="description" placeholder="Fx tryk bag højre øje, snurren, sumatriptan..."></textarea>
+      <div id="normalFields">
+        <label for="description">Beskrivelse</label>
+        <textarea id="description" placeholder="Fx tryk bag højre øje eller snurren i ansigtet"></textarea>
+      </div>
 
-      <label for="pain">Smertegrad (0–10), hvis relevant</label>
-      <input id="pain" type="number" min="0" max="10" placeholder="Fx 7">
+      <div id="medicationFields" class="hidden">
+        <label for="medName">Præparat</label>
+        <input id="medName" list="medicineList" placeholder="Fx sumatriptan">
+        <datalist id="medicineList">
+          <option value="Sumatriptan">
+          <option value="Paracetamol">
+          <option value="Ibuprofen">
+          <option value="Naproxen">
+        </datalist>
 
-      <label for="eventTime">Tidspunkt</label>
+        <label for="medDose">Dosis</label>
+        <input id="medDose" type="number" min="0" step="any" placeholder="Fx 50">
+
+        <label for="medUnit">Enhed</label>
+        <select id="medUnit">
+          <option value="mg">mg</option>
+          <option value="g">g</option>
+          <option value="ml">ml</option>
+          <option value="tablet">tablet</option>
+          <option value="spray">spray</option>
+          <option value="andet">Andet</option>
+        </select>
+
+        <label for="medNotes">Bemærkninger (valgfrit)</label>
+        <textarea id="medNotes" placeholder="Fx effekt, bivirkninger eller hvorfor du tog medicinen"></textarea>
+      </div>
+
+      <div id="painField">
+        <label for="pain">Smertegrad (0–10), hvis relevant</label>
+        <input id="pain" type="number" min="0" max="10" placeholder="Fx 7">
+      </div>
+
+      <label for="eventTime">Tidspunkt for registreringen</label>
       <input id="eventTime" type="datetime-local">
 
       <button onclick="addEvent()">Gem registrering</button>
@@ -145,34 +176,67 @@ function startAttack() {
   save();
 }
 
+function toggleMedication() {
+  const isMedicine = document.getElementById("type").value === "Medicin";
+  document.getElementById("medicationFields").classList.toggle("hidden", !isMedicine);
+  document.getElementById("normalFields").classList.toggle("hidden", isMedicine);
+  document.getElementById("painField").classList.toggle("hidden", isMedicine);
+}
+
 function addEvent() {
   const episode = activeEpisode();
   if (!episode) return;
 
   const type = document.getElementById("type").value;
-  const description = document.getElementById("description").value.trim();
-  const pain = document.getElementById("pain").value;
   const time = document.getElementById("eventTime").value;
+  const pain = document.getElementById("pain").value;
 
-  if (!description && pain === "") {
-    alert("Skriv en beskrivelse eller angiv en smertegrad.");
-    return;
-  }
-  if (pain !== "" && (Number(pain) < 0 || Number(pain) > 10)) {
-    alert("Smertegraden skal være mellem 0 og 10.");
-    return;
-  }
-
-  episode.events.push({
+  const event = {
     type,
-    description,
-    pain: pain === "" ? null : Number(pain),
-    time: time ? new Date(time).toISOString() : new Date().toISOString()
-  });
+    time: time ? new Date(time).toISOString() : new Date().toISOString(),
+    description: "",
+    pain: null
+  };
+
+  if (type === "Medicin") {
+    const name = document.getElementById("medName").value.trim();
+    const dose = document.getElementById("medDose").value;
+    const unit = document.getElementById("medUnit").value;
+    const notes = document.getElementById("medNotes").value.trim();
+
+    if (!name || dose === "" || Number(dose) <= 0) {
+      alert("Angiv præparat og en dosis større end 0.");
+      return;
+    }
+
+    event.medication = { name, dose: Number(dose), unit, notes };
+    event.description = name + " – " + dose + " " + unit;
+  } else {
+    const description = document.getElementById("description").value.trim();
+
+    if (!description && pain === "") {
+      alert("Skriv en beskrivelse eller angiv en smertegrad.");
+      return;
+    }
+
+    if (pain !== "" && (Number(pain) < 0 || Number(pain) > 10)) {
+      alert("Smertegraden skal være mellem 0 og 10.");
+      return;
+    }
+
+    event.description = description;
+    event.pain = pain === "" ? null : Number(pain);
+  }
+
+  episode.events.push(event);
 
   document.getElementById("description").value = "";
   document.getElementById("pain").value = "";
+  document.getElementById("medName").value = "";
+  document.getElementById("medDose").value = "";
+  document.getElementById("medNotes").value = "";
   document.getElementById("eventTime").value = nowLocal();
+
   save();
 }
 
@@ -195,9 +259,10 @@ function render() {
     document.getElementById("startTime").textContent =
       "Startet: " + formatDate(active.start);
     document.getElementById("timeline").innerHTML =
-      active.events.length ? active.events
-        .slice().sort((a,b) => new Date(a.time)-new Date(b.time))
-        .map(eventHTML).join("") : "<p class='small'>Ingen registreringer endnu.</p>";
+      active.events.length
+        ? active.events.slice().sort((a,b) => new Date(a.time)-new Date(b.time))
+          .map(eventHTML).join("")
+        : "<p class='small'>Ingen registreringer endnu.</p>";
   }
 
   const history = episodes.filter(e => e.end);
@@ -207,17 +272,27 @@ function render() {
         <strong>${formatDate(e.start)}</strong>
         <p class="small">Afsluttet: ${formatDate(e.end)}</p>
         <p>${e.events.length} registreringer</p>
-        ${e.events.map(eventHTML).join("")}
+        ${e.events.slice().sort((a,b) => new Date(a.time)-new Date(b.time)).map(eventHTML).join("")}
       </div>`).join("")
     : "<p class='small'>Dine afsluttede anfald vises her.</p>";
 }
 
 function eventHTML(e) {
+  let details = "";
+
+  if (e.medication) {
+    details = `<strong>${escapeHTML(e.medication.name)}</strong>
+      <div>Dosis: ${escapeHTML(e.medication.dose)} ${escapeHTML(e.medication.unit)}</div>
+      ${e.medication.notes ? `<div>${escapeHTML(e.medication.notes)}</div>` : ""}`;
+  } else {
+    details = `<div>${escapeHTML(e.description || "")}</div>`;
+  }
+
   return `<div class="event">
     <strong>${escapeHTML(e.type)}</strong>
     <div class="small">${formatDate(e.time)}</div>
-    <div>${escapeHTML(e.description || "")}</div>
-    ${e.pain !== null ? "<strong>Smerte: " + e.pain + "/10</strong>" : ""}
+    ${details}
+    ${e.pain !== null && e.pain !== undefined ? "<strong>Smerte: " + escapeHTML(e.pain) + "/10</strong>" : ""}
   </div>`;
 }
 
@@ -234,7 +309,7 @@ function download(filename, content, type) {
   a.href = url;
   a.download = filename;
   a.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function exportJSON() {
@@ -244,13 +319,21 @@ function exportJSON() {
 
 function exportCSV() {
   const rows = [["Anfald startet","Anfald afsluttet","Registreringstid",
-    "Type","Beskrivelse","Smertegrad"]];
+    "Type","Beskrivelse","Præparat","Dosis","Enhed","Bemærkninger","Smertegrad"]];
+
   episodes.forEach(e => e.events.forEach(v => rows.push([
-    e.start, e.end || "", v.time, v.type, v.description, v.pain ?? ""
+    e.start, e.end || "", v.time, v.type, v.description || "",
+    v.medication?.name || "",
+    v.medication?.dose ?? "",
+    v.medication?.unit || "",
+    v.medication?.notes || "",
+    v.pain ?? ""
   ])));
+
   const csv = rows.map(row => row.map(value =>
     '"' + String(value).replace(/"/g, '""') + '"'
   ).join(";")).join("\n");
+
   download("hovedpine-data.csv", "\uFEFF" + csv, "text/csv;charset=utf-8");
 }
 
@@ -260,6 +343,7 @@ function importJSON() {
     alert("Vælg først en JSON-sikkerhedskopi.");
     return;
   }
+
   const reader = new FileReader();
   reader.onload = () => {
     try {
@@ -267,6 +351,7 @@ function importJSON() {
       if (!Array.isArray(imported) ||
           !imported.every(e => e && typeof e.start === "string" &&
           Array.isArray(e.events))) throw new Error();
+
       if (!confirm("Importen erstatter alle nuværende registreringer. Fortsæt?")) return;
       episodes = imported;
       save();
