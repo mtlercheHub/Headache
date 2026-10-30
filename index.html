@@ -5,8 +5,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Min hovedpinedagbog</title>
+
 <style>
 * { box-sizing: border-box; }
+
 body {
   font-family: Arial, sans-serif;
   background: #f3f4f6;
@@ -14,10 +16,13 @@ body {
   margin: 0;
   padding: 20px 14px;
 }
+
 main { max-width: 650px; margin: auto; }
+
 h1 { font-size: 27px; margin-bottom: 5px; }
 h2 { font-size: 19px; margin-top: 25px; }
 .sub { color: #687080; margin-top: 0; }
+
 .card {
   background: white;
   padding: 18px;
@@ -25,7 +30,13 @@ h2 { font-size: 19px; margin-top: 25px; }
   margin: 15px 0;
   box-shadow: 0 2px 8px #0000000c;
 }
-label { display: block; font-weight: bold; margin: 14px 0 6px; }
+
+label {
+  display: block;
+  font-weight: bold;
+  margin: 14px 0 6px;
+}
+
 input, select, textarea, button {
   width: 100%;
   padding: 12px;
@@ -33,7 +44,9 @@ input, select, textarea, button {
   border: 1px solid #cbd0d8;
   font: inherit;
 }
-textarea { min-height: 65px; }
+
+textarea { min-height: 75px; }
+
 button {
   background: #344b68;
   color: white;
@@ -42,20 +55,60 @@ button {
   font-weight: bold;
   cursor: pointer;
 }
-button.secondary { background: #e8edf3; color: #25364c; }
+
+button.secondary {
+  background: #e8edf3;
+  color: #25364c;
+}
+
 button.danger { background: #8d3434; }
+
 .small { font-size: 13px; color: #687080; }
+
 .event {
   border-left: 3px solid #8097b4;
-  padding: 8px 12px;
+  padding: 10px 12px;
   margin: 12px 0;
   background: #f7f8fa;
   overflow-wrap: anywhere;
 }
-.episode { border-top: 1px solid #e3e6eb; padding-top: 12px; margin-top: 12px; }
+
+.episode {
+  border-top: 1px solid #e3e6eb;
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
 .hidden { display: none !important; }
+
+.symptom-option {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+
+.symptom-option label {
+  display: flex;
+  align-items: center;
+  font-weight: normal;
+  font-size: 14px;
+  margin: 5px 0;
+  gap: 7px;
+}
+
+.symptom-option input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+@media (max-width: 400px) {
+  .symptom-option { grid-template-columns: 1fr; }
+}
 </style>
 </head>
+
 <body>
 <main>
   <h1>🧠 Min hovedpinedagbog</h1>
@@ -69,7 +122,7 @@ button.danger { background: #8d3434; }
       <p id="startTime" class="small"></p>
 
       <label for="type">Hvad vil du registrere?</label>
-      <select id="type" onchange="toggleMedication()">
+      <select id="type" onchange="toggleFields()">
         <option value="Symptom">Symptom</option>
         <option value="Smertegrad">Smertegrad</option>
         <option value="Medicin">Medicin</option>
@@ -77,8 +130,29 @@ button.danger { background: #8d3434; }
       </select>
 
       <div id="normalFields">
-        <label for="description">Beskrivelse</label>
-        <textarea id="description" placeholder="Fx tryk bag højre øje eller snurren i ansigtet"></textarea>
+        <div id="symptomFields">
+          <label>Vælg symptomer (flere valg mulige)</label>
+          <div class="symptom-option">
+            <label><input type="checkbox" value="Trykkende smerte">Trykkende smerte</label>
+            <label><input type="checkbox" value="Pulserende smerte">Pulserende smerte</label>
+            <label><input type="checkbox" value="Smerte bag øjet">Smerte bag øjet</label>
+            <label><input type="checkbox" value="Smerte omkring øjet">Smerte omkring øjet</label>
+            <label><input type="checkbox" value="Nakkesmerter">Nakkesmerter</label>
+            <label><input type="checkbox" value="Smerte bag øret">Smerte bag øret</label>
+            <label><input type="checkbox" value="Øm hovedbund">Øm hovedbund</label>
+            <label><input type="checkbox" value="Kvalme">Kvalme</label>
+            <label><input type="checkbox" value="Lysfølsomhed">Lysfølsomhed</label>
+            <label><input type="checkbox" value="Lydfølsomhed">Lydfølsomhed</label>
+            <label><input type="checkbox" value="Synsforstyrrelser">Synsforstyrrelser</label>
+            <label><input type="checkbox" value="Snurren eller føleforstyrrelser">Snurren eller føleforstyrrelser</label>
+            <label><input type="checkbox" value="Svimmelhed">Svimmelhed</label>
+            <label><input type="checkbox" value="Træthed">Træthed</label>
+          </div>
+        </div>
+
+        <label for="description">Beskrivelse / andre symptomer</label>
+        <textarea id="description"
+          placeholder="Fx højre side af ansigtet snurrer, eller smerterne tiltager..."></textarea>
       </div>
 
       <div id="medicationFields" class="hidden">
@@ -105,21 +179,23 @@ button.danger { background: #8d3434; }
         </select>
 
         <label for="medNotes">Bemærkninger (valgfrit)</label>
-        <textarea id="medNotes" placeholder="Fx effekt, bivirkninger eller hvorfor du tog medicinen"></textarea>
+        <textarea id="medNotes"
+          placeholder="Fx effekt, bivirkninger eller årsag til indtagelse"></textarea>
       </div>
 
       <div id="painField">
         <label for="pain">Smertegrad (0–10), hvis relevant</label>
-        <input id="pain" type="number" min="0" max="10" placeholder="Fx 7">
+        <input id="pain" type="number" min="0" max="10" step="1" placeholder="Fx 7">
       </div>
 
-      <label for="eventTime">Tidspunkt for registreringen</label>
+      <label for="eventTime">Tidspunkt</label>
       <input id="eventTime" type="datetime-local">
 
       <button onclick="addEvent()">Gem registrering</button>
 
       <h2>Dette anfald</h2>
       <div id="timeline"></div>
+
       <button class="danger" onclick="endAttack()">Afslut anfald</button>
     </div>
   </section>
@@ -134,27 +210,42 @@ button.danger { background: #8d3434; }
     <p class="small">Gem en sikkerhedskopi eller eksportér dine registreringer.</p>
     <button onclick="exportJSON()">Eksportér sikkerhedskopi (JSON)</button>
     <button class="secondary" onclick="exportCSV()">Eksportér til regneark (CSV)</button>
+
     <label for="importFile">Gendan fra sikkerhedskopi</label>
     <input id="importFile" type="file" accept=".json,application/json">
     <button class="secondary" onclick="importJSON()">Importér sikkerhedskopi</button>
   </section>
 
-  <p class="small">Data gemmes lokalt i denne browser. Husk at tage sikkerhedskopi.</p>
+  <p class="small">
+    Data gemmes lokalt i denne browser. Husk at tage sikkerhedskopi.
+  </p>
 </main>
 
 <script>
 const KEY = "hovedpineDagbogV1";
-let episodes = JSON.parse(localStorage.getItem(KEY) || "[]");
+
+let episodes = [];
+
+try {
+  episodes = JSON.parse(localStorage.getItem(KEY) || "[]");
+  if (!Array.isArray(episodes)) episodes = [];
+} catch {
+  episodes = [];
+}
 
 function save() {
-  localStorage.setItem(KEY, JSON.stringify(episodes));
-  render();
+  try {
+    localStorage.setItem(KEY, JSON.stringify(episodes));
+    render();
+  } catch {
+    alert("Data kunne ikke gemmes. Tag en sikkerhedskopi, hvis muligt.");
+  }
 }
 
 function nowLocal() {
   const d = new Date();
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-    .toISOString().slice(0,16);
+    .toISOString().slice(0, 16);
 }
 
 function formatDate(value) {
@@ -167,20 +258,34 @@ function activeEpisode() {
 
 function startAttack() {
   if (activeEpisode()) return;
+
   episodes.unshift({
     id: Date.now(),
     start: new Date().toISOString(),
     end: null,
     events: []
   });
+
   save();
 }
 
-function toggleMedication() {
-  const isMedicine = document.getElementById("type").value === "Medicin";
-  document.getElementById("medicationFields").classList.toggle("hidden", !isMedicine);
-  document.getElementById("normalFields").classList.toggle("hidden", isMedicine);
-  document.getElementById("painField").classList.toggle("hidden", isMedicine);
+function toggleFields() {
+  const type = document.getElementById("type").value;
+  const isMedicine = type === "Medicin";
+  const isSymptom = type === "Symptom";
+  const isPain = type === "Smertegrad";
+
+  document.getElementById("normalFields")
+    .classList.toggle("hidden", isMedicine);
+
+  document.getElementById("medicationFields")
+    .classList.toggle("hidden", !isMedicine);
+
+  document.getElementById("symptomFields")
+    .classList.toggle("hidden", !isSymptom);
+
+  document.getElementById("painField")
+    .classList.toggle("hidden", isMedicine);
 }
 
 function addEvent() {
@@ -192,10 +297,11 @@ function addEvent() {
   const pain = document.getElementById("pain").value;
 
   const event = {
-    type,
+    type: type,
     time: time ? new Date(time).toISOString() : new Date().toISOString(),
     description: "",
-    pain: null
+    pain: null,
+    symptoms: []
   };
 
   if (type === "Medicin") {
@@ -209,18 +315,39 @@ function addEvent() {
       return;
     }
 
-    event.medication = { name, dose: Number(dose), unit, notes };
+    event.medication = {
+      name: name,
+      dose: Number(dose),
+      unit: unit,
+      notes: notes
+    };
+
     event.description = name + " – " + dose + " " + unit;
+
   } else {
     const description = document.getElementById("description").value.trim();
 
-    if (!description && pain === "") {
-      alert("Skriv en beskrivelse eller angiv en smertegrad.");
+    if (type === "Symptom") {
+      event.symptoms = Array.from(
+        document.querySelectorAll("#symptomFields input:checked")
+      ).map(input => input.value);
+    }
+
+    if (type === "Smertegrad" && pain === "") {
+      alert("Angiv en smertegrad.");
       return;
     }
 
-    if (pain !== "" && (Number(pain) < 0 || Number(pain) > 10)) {
-      alert("Smertegraden skal være mellem 0 og 10.");
+    if (!description && event.symptoms.length === 0 && pain === "") {
+      alert("Vælg mindst ét symptom, skriv en beskrivelse eller angiv smertegrad.");
+      return;
+    }
+
+    if (pain !== "" && (
+      !Number.isInteger(Number(pain)) ||
+      Number(pain) < 0 || Number(pain) > 10
+    )) {
+      alert("Smertegraden skal være et helt tal mellem 0 og 10.");
       return;
     }
 
@@ -235,6 +362,10 @@ function addEvent() {
   document.getElementById("medName").value = "";
   document.getElementById("medDose").value = "";
   document.getElementById("medNotes").value = "";
+
+  document.querySelectorAll("#symptomFields input:checked")
+    .forEach(input => input.checked = false);
+
   document.getElementById("eventTime").value = nowLocal();
 
   save();
@@ -243,127 +374,209 @@ function addEvent() {
 function endAttack() {
   const episode = activeEpisode();
   if (!episode) return;
+
   if (!confirm("Vil du afslutte dette anfald?")) return;
+
   episode.end = new Date().toISOString();
   save();
-}
-
-function render() {
-  const active = activeEpisode();
-  document.getElementById("status").textContent =
-    active ? "Anfald i gang" : "Intet aktivt anfald";
-  document.getElementById("startBtn").classList.toggle("hidden", !!active);
-  document.getElementById("activeArea").classList.toggle("hidden", !active);
-
-  if (active) {
-    document.getElementById("startTime").textContent =
-      "Startet: " + formatDate(active.start);
-    document.getElementById("timeline").innerHTML =
-      active.events.length
-        ? active.events.slice().sort((a,b) => new Date(a.time)-new Date(b.time))
-          .map(eventHTML).join("")
-        : "<p class='small'>Ingen registreringer endnu.</p>";
-  }
-
-  const history = episodes.filter(e => e.end);
-  document.getElementById("history").innerHTML = history.length
-    ? history.map(e => `
-      <div class="episode">
-        <strong>${formatDate(e.start)}</strong>
-        <p class="small">Afsluttet: ${formatDate(e.end)}</p>
-        <p>${e.events.length} registreringer</p>
-        ${e.events.slice().sort((a,b) => new Date(a.time)-new Date(b.time)).map(eventHTML).join("")}
-      </div>`).join("")
-    : "<p class='small'>Dine afsluttede anfald vises her.</p>";
 }
 
 function eventHTML(e) {
   let details = "";
 
   if (e.medication) {
-    details = `<strong>${escapeHTML(e.medication.name)}</strong>
+    details = `
+      <strong>${escapeHTML(e.medication.name)}</strong>
       <div>Dosis: ${escapeHTML(e.medication.dose)} ${escapeHTML(e.medication.unit)}</div>
-      ${e.medication.notes ? `<div>${escapeHTML(e.medication.notes)}</div>` : ""}`;
+      ${e.medication.notes
+        ? `<div>${escapeHTML(e.medication.notes)}</div>` : ""}
+    `;
   } else {
-    details = `<div>${escapeHTML(e.description || "")}</div>`;
+    details = `
+      ${e.symptoms && e.symptoms.length
+        ? `<div><strong>Symptomer:</strong> ${e.symptoms.map(escapeHTML).join(", ")}</div>`
+        : ""}
+      ${e.description
+        ? `<div>${escapeHTML(e.description)}</div>` : ""}
+    `;
   }
 
-  return `<div class="event">
-    <strong>${escapeHTML(e.type)}</strong>
-    <div class="small">${formatDate(e.time)}</div>
-    ${details}
-    ${e.pain !== null && e.pain !== undefined ? "<strong>Smerte: " + escapeHTML(e.pain) + "/10</strong>" : ""}
-  </div>`;
+  return `
+    <div class="event">
+      <strong>${escapeHTML(e.type)}</strong>
+      <div class="small">${formatDate(e.time)}</div>
+      ${details}
+      ${e.pain !== null && e.pain !== undefined
+        ? `<strong>Smerte: ${escapeHTML(e.pain)}/10</strong>` : ""}
+    </div>
+  `;
 }
 
 function escapeHTML(value) {
   return String(value).replace(/[&<>"']/g, c => ({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
   })[c]);
 }
 
+function render() {
+  const active = activeEpisode();
+
+  document.getElementById("status").textContent =
+    active ? "Anfald i gang" : "Intet aktivt anfald";
+
+  document.getElementById("startBtn")
+    .classList.toggle("hidden", !!active);
+
+  document.getElementById("activeArea")
+    .classList.toggle("hidden", !active);
+
+  if (active) {
+    document.getElementById("startTime").textContent =
+      "Startet: " + formatDate(active.start);
+
+    document.getElementById("timeline").innerHTML =
+      active.events.length
+        ? active.events
+            .slice()
+            .sort((a, b) => new Date(a.time) - new Date(b.time))
+            .map(eventHTML).join("")
+        : "<p class='small'>Ingen registreringer endnu.</p>";
+  }
+
+  const history = episodes.filter(e => e.end);
+
+  document.getElementById("history").innerHTML = history.length
+    ? history.map(e => `
+        <div class="episode">
+          <strong>${formatDate(e.start)}</strong>
+          <p class="small">Afsluttet: ${formatDate(e.end)}</p>
+          <p>${e.events.length} registreringer</p>
+          ${e.events
+            .slice()
+            .sort((a, b) => new Date(a.time) - new Date(b.time))
+            .map(eventHTML).join("")}
+        </div>
+      `).join("")
+    : "<p class='small'>Dine afsluttede anfald vises her.</p>";
+}
+
 function download(filename, content, type) {
-  const blob = new Blob([content], {type});
+  const blob = new Blob([content], { type: type });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
+
   a.href = url;
   a.download = filename;
   a.click();
+
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function exportJSON() {
-  download("hovedpine-backup.json",
-    JSON.stringify(episodes, null, 2), "application/json");
+  const date = new Date().toISOString().slice(0, 10);
+
+  download(
+    "hovedpine-backup-" + date + ".json",
+    JSON.stringify(episodes, null, 2),
+    "application/json"
+  );
 }
 
 function exportCSV() {
-  const rows = [["Anfald startet","Anfald afsluttet","Registreringstid",
-    "Type","Beskrivelse","Præparat","Dosis","Enhed","Bemærkninger","Smertegrad"]];
+  const rows = [[
+    "Anfald startet",
+    "Anfald afsluttet",
+    "Registreringstid",
+    "Type",
+    "Symptomer",
+    "Beskrivelse",
+    "Præparat",
+    "Dosis",
+    "Enhed",
+    "Bemærkninger",
+    "Smertegrad"
+  ]];
 
-  episodes.forEach(e => e.events.forEach(v => rows.push([
-    e.start, e.end || "", v.time, v.type, v.description || "",
-    v.medication?.name || "",
-    v.medication?.dose ?? "",
-    v.medication?.unit || "",
-    v.medication?.notes || "",
-    v.pain ?? ""
-  ])));
+  episodes.forEach(e => {
+    e.events.forEach(v => {
+      rows.push([
+        e.start,
+        e.end || "",
+        v.time,
+        v.type,
+        (v.symptoms || []).join(", "),
+        v.description || "",
+        v.medication?.name || "",
+        v.medication?.dose ?? "",
+        v.medication?.unit || "",
+        v.medication?.notes || "",
+        v.pain ?? ""
+      ]);
+    });
+  });
 
-  const csv = rows.map(row => row.map(value =>
-    '"' + String(value).replace(/"/g, '""') + '"'
-  ).join(";")).join("\n");
+  const csv = rows.map(row =>
+    row.map(value =>
+      '"' + String(value).replace(/"/g, '""') + '"'
+    ).join(";")
+  ).join("\n");
 
-  download("hovedpine-data.csv", "\uFEFF" + csv, "text/csv;charset=utf-8");
+  const date = new Date().toISOString().slice(0, 10);
+
+  download(
+    "hovedpine-data-" + date + ".csv",
+    "\uFEFF" + csv,
+    "text/csv;charset=utf-8"
+  );
 }
 
 function importJSON() {
   const file = document.getElementById("importFile").files[0];
+
   if (!file) {
     alert("Vælg først en JSON-sikkerhedskopi.");
     return;
   }
 
   const reader = new FileReader();
+
   reader.onload = () => {
     try {
       const imported = JSON.parse(reader.result);
-      if (!Array.isArray(imported) ||
-          !imported.every(e => e && typeof e.start === "string" &&
-          Array.isArray(e.events))) throw new Error();
 
-      if (!confirm("Importen erstatter alle nuværende registreringer. Fortsæt?")) return;
+      if (!Array.isArray(imported) ||
+          !imported.every(e =>
+            e &&
+            typeof e.start === "string" &&
+            Array.isArray(e.events)
+          )) {
+        throw new Error("Ugyldig fil");
+      }
+
+      if (!confirm(
+        "Importen erstatter alle nuværende registreringer. Fortsæt?"
+      )) return;
+
       episodes = imported;
       save();
+
       alert("Sikkerhedskopien er importeret.");
+
     } catch {
       alert("Filen kunne ikke læses som en gyldig sikkerhedskopi.");
     }
   };
+
   reader.readAsText(file);
 }
 
 document.getElementById("eventTime").value = nowLocal();
+
+toggleFields();
 render();
 </script>
 </body>
